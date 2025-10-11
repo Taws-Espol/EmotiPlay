@@ -248,6 +248,593 @@ opencv-python==4.10.0   # Procesamiento de imágenes
 numpy==2.0.0            # Operaciones numéricas
 matplotlib              # Visualización de datos
 scipy==1.14.0           # Operaciones científicas
+fastapi                 # Framework para API REST
+```
+
+## API REST Endpoints
+
+El backend proporciona una API REST construida con FastAPI para integración con el frontend y otras aplicaciones.
+
+### Configuración del Servidor
+
+**Iniciar el servidor**:
+```bash
+cd backend
+uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+**URL base**: `http://localhost:8000`
+
+**Spotify Redirect URI autorizada**: `http://localhost:8000/callback`
+
+### 1. Health Check
+
+Verifica el estado del servidor y servicios.
+
+**Endpoint**: `GET /health`
+
+**Descripción**: Verifica que el servidor esté funcionando y que los servicios de procesamiento estén listos.
+
+**Request**:
+```bash
+curl -X GET http://localhost:8000/health
+```
+
+**Response** (200 OK):
+```json
+{
+  "status": "healthy",
+  "service": "EmotiPlay Backend API",
+  "version": "1.0.0",
+  "timestamp": "2025-10-11T10:30:00Z",
+  "services": {
+    "emotion_recognition": "operational",
+    "spotify_integration": "operational",
+    "mediapipe": "loaded"
+  }
+}
+```
+
+**Response** (503 Service Unavailable):
+```json
+{
+  "status": "unhealthy",
+  "service": "EmotiPlay Backend API",
+  "version": "1.0.0",
+  "timestamp": "2025-10-11T10:30:00Z",
+  "services": {
+    "emotion_recognition": "error",
+    "spotify_integration": "operational",
+    "mediapipe": "failed_to_load"
+  },
+  "error": "MediaPipe initialization failed"
+}
+```
+
+### 2. Detección de Emociones - Imagen
+
+Analiza una imagen estática y devuelve las emociones detectadas.
+
+**Endpoint**: `POST /api/v1/detect/image`
+
+**Descripción**: Recibe una imagen en formato base64 o multipart/form-data y retorna las emociones detectadas con sus puntuaciones.
+
+**Content-Type**: `multipart/form-data` o `application/json`
+
+**Request** (multipart/form-data):
+```bash
+curl -X POST http://localhost:8000/api/v1/detect/image \
+  -F "image=@/path/to/image.jpg"
+```
+
+**Request** (JSON con base64):
+```bash
+curl -X POST http://localhost:8000/api/v1/detect/image \
+  -H "Content-Type: application/json" \
+  -d '{
+    "image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA..."
+  }'
+```
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "timestamp": "2025-10-11T10:30:15.234Z",
+  "processing_time_ms": 45.3,
+  "detection": {
+    "face_detected": true,
+    "clase": "feliz",
+    "confianza": 0.8547,
+    "scores": {
+      "happy": 0.8547,
+      "surprise": 0.2134,
+      "sad": 0.0823,
+      "angry": 0.0512,
+      "disgust": 0.0234,
+      "fear": 0.0189
+    }
+  },
+  "features": {
+    "eyes": {
+      "right_eye_opening": 0.7234,
+      "left_eye_opening": 0.7189,
+      "eye_asymmetry": 0.0045,
+      "average_opening": 0.7211
+    },
+    "eyebrows": {
+      "right_eyebrow_raise": 0.1234,
+      "left_eyebrow_raise": 0.1189,
+      "eyebrow_angle": 5.234,
+      "eyebrow_distance": 0.4521
+    },
+    "mouth": {
+      "mouth_height": 0.2134,
+      "mouth_width": 0.6234,
+      "mouth_aspect_ratio": 0.3423,
+      "smile_intensity": 0.8123,
+      "lip_compression": 0.1234
+    },
+    "nose": {
+      "nose_position": 0.5012,
+      "nose_orientation": 0.0234,
+      "nostril_flare": 0.1123
+    }
+  },
+  "metadata": {
+    "image_resolution": {
+      "width": 640,
+      "height": 480
+    },
+    "face_landmarks_count": 468
+  }
+}
+```
+
+**Response** (400 Bad Request - No se detecta rostro):
+```json
+{
+  "success": false,
+  "timestamp": "2025-10-11T10:30:15.234Z",
+  "error": {
+    "code": "NO_FACE_DETECTED",
+    "message": "No se detectó ningún rostro en la imagen",
+    "details": "Asegúrese de que la imagen contenga un rostro visible y bien iluminado"
+  }
+}
+```
+
+**Response** (400 Bad Request - Imagen inválida):
+```json
+{
+  "success": false,
+  "timestamp": "2025-10-11T10:30:15.234Z",
+  "error": {
+    "code": "INVALID_IMAGE",
+    "message": "Formato de imagen no válido",
+    "details": "Formatos soportados: JPEG, PNG, WebP"
+  }
+}
+```
+
+### 3. Detección de Emociones - Video Stream
+
+Analiza un stream de video en tiempo real.
+
+**Endpoint**: `WebSocket /ws/detect/video`
+
+**Descripción**: Establece una conexión WebSocket para streaming de video y recepción de emociones en tiempo real.
+
+**Conexión**:
+```javascript
+const ws = new WebSocket('ws://localhost:8000/ws/detect/video');
+
+ws.onopen = () => {
+  console.log('Conexión establecida');
+};
+
+// Enviar frame
+ws.send(JSON.stringify({
+  type: 'frame',
+  data: base64ImageData,
+  timestamp: Date.now()
+}));
+
+// Recibir resultado
+ws.onmessage = (event) => {
+  const result = JSON.parse(event.data);
+  console.log(result);
+};
+```
+
+**Message enviado al servidor**:
+```json
+{
+  "type": "frame",
+  "data": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA...",
+  "timestamp": 1728648615234,
+  "frame_number": 156
+}
+```
+
+**Message recibido del servidor**:
+```json
+{
+  "type": "emotion_result",
+  "success": true,
+  "timestamp": "2025-10-11T10:30:15.234Z",
+  "frame_number": 156,
+  "detection": {
+    "face_detected": true,
+    "clase": "sorprendido",
+    "confianza": 0.7823,
+    "scores": {
+      "surprise": 0.7823,
+      "happy": 0.1234,
+      "fear": 0.0989,
+      "angry": 0.0456,
+      "sad": 0.0234,
+      "disgust": 0.0123
+    }
+  },
+  "processing_time_ms": 28.7
+}
+```
+
+**Message de error**:
+```json
+{
+  "type": "error",
+  "success": false,
+  "timestamp": "2025-10-11T10:30:15.234Z",
+  "error": {
+    "code": "PROCESSING_ERROR",
+    "message": "Error al procesar el frame",
+    "details": "Frame corrupto o formato inválido"
+  }
+}
+```
+
+**Control messages**:
+```json
+// Pausar procesamiento
+{
+  "type": "control",
+  "action": "pause"
+}
+
+// Reanudar procesamiento
+{
+  "type": "control",
+  "action": "resume"
+}
+
+// Cerrar conexión
+{
+  "type": "control",
+  "action": "close"
+}
+```
+
+### 4. Música Aleatoria
+
+Obtiene una playlist aleatoria de Spotify.
+
+**Endpoint**: `GET /api/v1/music/random`
+
+**Descripción**: Devuelve una playlist aleatoria de una categoría variada de Spotify.
+
+**Query Parameters**:
+- `mood` (opcional): Filtrar por estado de ánimo (happy, sad, energetic, calm, focus)
+- `limit` (opcional): Número de tracks a devolver (default: 20, max: 50)
+
+**Request**:
+```bash
+curl -X GET "http://localhost:8000/api/v1/music/random?mood=happy&limit=10"
+```
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "timestamp": "2025-10-11T10:30:15.234Z",
+  "playlist": {
+    "id": "37i9dQZF1DXdPec7aLTmlC",
+    "name": "Happy Hits",
+    "description": "Hits to boost your mood and fill you with happiness!",
+    "mood": "happy",
+    "image_url": "https://i.scdn.co/image/ab67706f00000002...",
+    "total_tracks": 50,
+    "tracks": [
+      {
+        "id": "3n3Ppam7vgaVa1iaRUc9Lp",
+        "name": "Mr. Brightside",
+        "artists": ["The Killers"],
+        "album": "Hot Fuss",
+        "duration_ms": 222973,
+        "preview_url": "https://p.scdn.co/mp3-preview/...",
+        "spotify_url": "https://open.spotify.com/track/3n3Ppam7vgaVa1iaRUc9Lp"
+      },
+      {
+        "id": "60nZcImufyMA1MKQY3dcCH",
+        "name": "Uptown Funk",
+        "artists": ["Mark Ronson", "Bruno Mars"],
+        "album": "Uptown Special",
+        "duration_ms": 269733,
+        "preview_url": "https://p.scdn.co/mp3-preview/...",
+        "spotify_url": "https://open.spotify.com/track/60nZcImufyMA1MKQY3dcCH"
+      }
+    ]
+  },
+  "metadata": {
+    "total_returned": 10,
+    "has_more": true
+  }
+}
+```
+
+**Response** (401 Unauthorized):
+```json
+{
+  "success": false,
+  "timestamp": "2025-10-11T10:30:15.234Z",
+  "error": {
+    "code": "SPOTIFY_AUTH_REQUIRED",
+    "message": "Autenticación con Spotify requerida",
+    "auth_url": "http://localhost:8000/api/v1/auth/spotify"
+  }
+}
+```
+
+### 5. Cambio de Música por Emoción
+
+Obtiene una playlist específica según la emoción detectada.
+
+**Endpoint**: `POST /api/v1/music/emotion`
+
+**Descripción**: Recibe una emoción y devuelve una playlist optimizada para ese estado emocional.
+
+**Content-Type**: `application/json`
+
+**Request**:
+```bash
+curl -X POST http://localhost:8000/api/v1/music/emotion \
+  -H "Content-Type: application/json" \
+  -d '{
+    "emotion": "triste",
+    "confianza": 0.7234,
+    "user_preferences": {
+      "language": "es",
+      "intensity": "medium"
+    }
+  }'
+```
+
+**Request Body**:
+```json
+{
+  "emotion": "triste",
+  "confianza": 0.7234,
+  "user_preferences": {
+    "language": "es",
+    "intensity": "medium",
+    "genres": ["pop", "indie", "acoustic"]
+  }
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "timestamp": "2025-10-11T10:30:15.234Z",
+  "emotion_detected": "triste",
+  "confianza": 0.7234,
+  "playlist": {
+    "id": "37i9dQZF1DX7qK8ma5wgG1",
+    "name": "Life Sucks",
+    "description": "Feeling blue? Here's music to match your mood.",
+    "emotion": "sad",
+    "mood_match_score": 0.8923,
+    "image_url": "https://i.scdn.co/image/ab67706f00000002...",
+    "total_tracks": 75,
+    "tracks": [
+      {
+        "id": "5CQ30WqJwcep0pYcV4AMNc",
+        "name": "Someone Like You",
+        "artists": ["Adele"],
+        "album": "21",
+        "duration_ms": 285000,
+        "valence": 0.234,
+        "energy": 0.312,
+        "preview_url": "https://p.scdn.co/mp3-preview/...",
+        "spotify_url": "https://open.spotify.com/track/5CQ30WqJwcep0pYcV4AMNc"
+      },
+      {
+        "id": "0nJW01T7XtvILxQgC5J7Wh",
+        "name": "The Night We Met",
+        "artists": ["Lord Huron"],
+        "album": "Strange Trails",
+        "duration_ms": 208000,
+        "valence": 0.189,
+        "energy": 0.276,
+        "preview_url": "https://p.scdn.co/mp3-preview/...",
+        "spotify_url": "https://open.spotify.com/track/0nJW01T7XtvILxQgC5J7Wh"
+      }
+    ]
+  },
+  "recommendation_reason": "Seleccionada por intensidad emocional y preferencias de usuario",
+  "metadata": {
+    "total_tracks": 20,
+    "avg_valence": 0.245,
+    "avg_energy": 0.298
+  }
+}
+```
+
+**Emociones soportadas**:
+- `feliz` - Música energética y optimista
+- `triste` - Música melancólica y reflexiva
+- `enojado` - Música intensa o relajante para desahogo
+- `sorprendido` - Música dinámica y variada
+- `neutral` - Mix balanceado de varios géneros
+- `amor` - Música romántica y emotiva
+
+### 6. Historial de Emociones
+
+Obtiene el historial de emociones detectadas en una sesión.
+
+**Endpoint**: `GET /api/v1/history/emotions`
+
+**Descripción**: Devuelve el historial de emociones detectadas con estadísticas agregadas.
+
+**Query Parameters**:
+- `session_id` (requerido): ID de la sesión
+- `limit` (opcional): Número de registros (default: 50, max: 500)
+- `from_timestamp` (opcional): Timestamp inicio en ISO 8601
+- `to_timestamp` (opcional): Timestamp fin en ISO 8601
+
+**Request**:
+```bash
+curl -X GET "http://localhost:8000/api/v1/history/emotions?session_id=abc123&limit=100"
+```
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "timestamp": "2025-10-11T10:30:15.234Z",
+  "session_id": "abc123",
+  "period": {
+    "start": "2025-10-11T10:00:00.000Z",
+    "end": "2025-10-11T10:30:00.000Z",
+    "duration_minutes": 30
+  },
+  "statistics": {
+    "total_detections": 450,
+    "emotion_distribution": {
+      "feliz": 187,
+      "neutral": 143,
+      "sorprendido": 56,
+      "triste": 34,
+      "enojado": 21,
+      "amor": 9
+    },
+    "emotion_percentages": {
+      "feliz": 41.56,
+      "neutral": 31.78,
+      "sorprendido": 12.44,
+      "triste": 7.56,
+      "enojado": 4.67,
+      "amor": 2.0
+    },
+    "dominant_emotion": "feliz",
+    "average_confidence": 0.7823,
+    "emotion_changes": 45,
+    "longest_emotion_streak": {
+      "emotion": "feliz",
+      "duration_seconds": 180,
+      "count": 90
+    }
+  },
+  "timeline": [
+    {
+      "timestamp": "2025-10-11T10:00:12.234Z",
+      "clase": "feliz",
+      "confianza": 0.8234,
+      "scores": {
+        "happy": 0.8234,
+        "surprise": 0.1234,
+        "neutral": 0.0823,
+        "sad": 0.0234,
+        "angry": 0.0123,
+        "disgust": 0.0089
+      }
+    },
+    {
+      "timestamp": "2025-10-11T10:00:14.456Z",
+      "clase": "feliz",
+      "confianza": 0.8456,
+      "scores": {
+        "happy": 0.8456,
+        "surprise": 0.0923,
+        "neutral": 0.0734,
+        "sad": 0.0198,
+        "angry": 0.0134,
+        "disgust": 0.0076
+      }
+    }
+  ],
+  "playlists_played": [
+    {
+      "emotion": "feliz",
+      "playlist_id": "37i9dQZF1DXdPec7aLTmlC",
+      "playlist_name": "Happy Hits",
+      "played_at": "2025-10-11T10:00:15.000Z",
+      "duration_minutes": 12.5
+    }
+  ],
+  "metadata": {
+    "total_returned": 100,
+    "has_more": true,
+    "next_cursor": "eyJsYXN0X3RpbWVzdGFtcCI6MTcyODY0ODYxNTIzNH0="
+  }
+}
+```
+
+### Autenticación con Spotify
+
+#### Iniciar autenticación
+
+**Endpoint**: `GET /api/v1/auth/spotify`
+
+**Response**:
+```json
+{
+  "auth_url": "https://accounts.spotify.com/authorize?client_id=...&redirect_uri=http://localhost:8000/callback&scope=..."
+}
+```
+
+#### Callback de autorización
+
+**Endpoint**: `GET /callback`
+
+**Query Parameters**:
+- `code`: Código de autorización de Spotify
+- `state`: Token de estado para validación
+
+**Response**: Redirección al frontend con token de sesión
+
+### Códigos de Error
+
+| Código | Mensaje | Descripción |
+|--------|---------|-------------|
+| `NO_FACE_DETECTED` | No face detected | No se encontró ningún rostro en la imagen |
+| `INVALID_IMAGE` | Invalid image format | Formato de imagen no soportado |
+| `PROCESSING_ERROR` | Processing failed | Error durante el procesamiento |
+| `SPOTIFY_AUTH_REQUIRED` | Spotify auth required | Se requiere autenticación con Spotify |
+| `INVALID_SESSION` | Invalid session ID | ID de sesión no válido o expirado |
+| `RATE_LIMIT_EXCEEDED` | Too many requests | Límite de requests excedido |
+| `INTERNAL_ERROR` | Internal server error | Error interno del servidor |
+
+### Rate Limiting
+
+- **General**: 100 requests por minuto por IP
+- **Image Detection**: 30 requests por minuto por sesión
+- **Music Endpoints**: 60 requests por minuto por sesión
+
+**Response cuando se excede el límite** (429 Too Many Requests):
+```json
+{
+  "success": false,
+  "error": {
+    "code": "RATE_LIMIT_EXCEEDED",
+    "message": "Límite de requests excedido",
+    "retry_after": 45,
+    "limit": 100,
+    "remaining": 0
+  }
+}
 ```
 
 ## API de Uso
