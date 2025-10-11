@@ -1,0 +1,167 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { Card } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Music, Play, Pause, SkipForward, Volume2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+
+type Emotion = "feliz" | "triste" | "neutral" | "enojado" | "sorprendido" | "amor"
+
+interface SpotifyPlayerProps {
+  currentEmotion?: Emotion
+  enabled: boolean
+}
+
+// Playlists de Spotify según emociones
+const emotionPlaylists = {
+  feliz: {
+    name: "Happy Vibes",
+    id: "37i9dQZF1DXdPec7aLTmlC",
+    description: "Música alegre y energética",
+    color: "from-yellow-500/20 to-orange-500/20",
+  },
+  triste: {
+    name: "Sad Songs",
+    id: "37i9dQZF1DX7qK8ma5wgG1",
+    description: "Música melancólica y reflexiva",
+    color: "from-blue-500/20 to-indigo-500/20",
+  },
+  neutral: {
+    name: "Chill Vibes",
+    id: "37i9dQZF1DX4WYpdgoIcn6",
+    description: "Música relajante y tranquila",
+    color: "from-gray-500/20 to-slate-500/20",
+  },
+  enojado: {
+    name: "Intense Energy",
+    id: "37i9dQZF1DX1tyCD9QhIWF",
+    description: "Música intensa y poderosa",
+    color: "from-red-500/20 to-rose-500/20",
+  },
+  sorprendido: {
+    name: "Upbeat Mix",
+    id: "37i9dQZF1DXaXB8fQg7xif",
+    description: "Música sorprendente y dinámica",
+    color: "from-purple-500/20 to-violet-500/20",
+  },
+  amor: {
+    name: "Love Songs",
+    id: "37i9dQZF1DX50QitC6Oqtn",
+    description: "Música romántica y emotiva",
+    color: "from-pink-500/20 to-rose-500/20",
+  },
+}
+
+export default function SpotifyPlayer({ currentEmotion, enabled }: SpotifyPlayerProps) {
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentTrack, setCurrentTrack] = useState<string>("Esperando emoción...")
+
+  useEffect(() => {
+    if (enabled && currentEmotion) {
+      const playlist = emotionPlaylists[currentEmotion]
+      setCurrentTrack(`Reproduciendo: ${playlist.name}`)
+      setIsPlaying(true)
+
+      console.log(`[v0] Cambiando a playlist: ${playlist.name} (${playlist.id})`)
+    }
+  }, [currentEmotion, enabled])
+
+  if (!enabled) {
+    return (
+      <Card className="p-6 border-2 shadow-xl bg-gradient-to-br from-card to-muted/30 hover-lift transition-all duration-300">
+        <div className="flex items-center gap-4 text-muted-foreground">
+          <Music className="w-12 h-12 opacity-50 animate-float" />
+          <div>
+            <h3 className="font-semibold text-foreground mb-1">Spotify Desactivado</h3>
+            <p className="text-sm">Activa Spotify para cambiar música según tu emoción</p>
+          </div>
+        </div>
+      </Card>
+    )
+  }
+
+  const playlist = currentEmotion ? emotionPlaylists[currentEmotion] : null
+
+  return (
+    <Card
+      className={`p-6 border-2 shadow-xl bg-gradient-to-br ${playlist?.color || "from-card to-muted/30"} hover-lift transition-all duration-500 animate-scale-in`}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-green-500 rounded-full animate-pulse-glow">
+            <Music className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-lg">{playlist?.name || "Spotify Player"}</h3>
+            <p className="text-sm text-muted-foreground">{playlist?.description || "Esperando emoción..."}</p>
+          </div>
+        </div>
+        <Badge variant="outline" className="bg-green-500/10 border-green-500/50 animate-scale-in">
+          <span className="relative flex h-2 w-2 mr-2">
+            <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+          </span>
+          Conectado
+        </Badge>
+      </div>
+
+      <div className="space-y-4">
+        <div className="bg-card/50 backdrop-blur-sm rounded-lg p-4 transition-all duration-300 hover:bg-card/70">
+          <p className="text-sm font-medium mb-2">{currentTrack}</p>
+          <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+            <div
+              className="bg-green-500 h-full rounded-full relative overflow-hidden transition-all duration-500"
+              style={{ width: "45%" }}
+            >
+              <div className="absolute inset-0 animate-shimmer" />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center gap-4">
+          <Button
+            variant="outline"
+            size="icon"
+            className="rounded-full bg-transparent transition-all duration-300 hover:scale-110 hover:bg-card"
+          >
+            <SkipForward className="w-4 h-4 rotate-180" />
+          </Button>
+          <Button
+            size="icon"
+            className="rounded-full w-12 h-12 bg-green-500 hover:bg-green-600 transition-all duration-300 hover:scale-110 animate-pulse-glow"
+            onClick={() => setIsPlaying(!isPlaying)}
+          >
+            {isPlaying ? <Pause className="w-5 h-5" fill="white" /> : <Play className="w-5 h-5" fill="white" />}
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="rounded-full bg-transparent transition-all duration-300 hover:scale-110 hover:bg-card"
+          >
+            <SkipForward className="w-4 h-4" />
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-3 px-4">
+          <Volume2 className="w-4 h-4 text-muted-foreground" />
+          <div className="flex-1 bg-muted rounded-full h-1.5 overflow-hidden">
+            <div
+              className="bg-gradient-to-r from-green-500 to-green-400 h-full rounded-full transition-all duration-300"
+              style={{ width: "70%" }}
+            />
+          </div>
+        </div>
+
+        {currentEmotion && (
+          <div className="text-center text-sm text-muted-foreground animate-slide-up">
+            Playlist seleccionada para:{" "}
+            <span className="font-semibold text-foreground bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              {currentEmotion}
+            </span>
+          </div>
+        )}
+      </div>
+    </Card>
+  )
+}
