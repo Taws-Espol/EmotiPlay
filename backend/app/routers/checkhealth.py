@@ -4,7 +4,7 @@ from app.core.settings import settings
 
 router = APIRouter(prefix="/api")
 
-router.get(path="/checkhealth", response_model=HealthStatus)
+@router.get(path="/checkhealth", response_model=HealthStatus)
 async def check_health():
     return HealthStatus(
             status="ok",
