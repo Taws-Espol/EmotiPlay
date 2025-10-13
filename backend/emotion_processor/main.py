@@ -18,7 +18,7 @@ class EmotionRecognitionSystem:
             processed_features = self.data_processing.main(face_points)
             emotions = self.emotions_recognition.recognize_emotion(processed_features)
             draw_emotions = self.emotions_visualization.main(emotions, original_image)
-            return draw_emotions
+            return draw_emotions, max(emotions, key=emotions.get)
         else:
             Exception(f"No face mesh")
             return face_image
