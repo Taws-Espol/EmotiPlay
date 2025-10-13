@@ -1,6 +1,7 @@
 import time
 from fastapi import FastAPI, Request
 from app.core.settings import settings
+from app.routers import emotion_detection, checkhealth
 import logging
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,6 +35,9 @@ async def log_request(request: Request, call_next):
 
     logger.info( f"{request.method} {request.url.path} completed_in={process_time:.2f}ms status_code={response.status_code}" )
     return response
+
+app.include_router(emotion_detection.router)
+app.include_router(checkhealth.router)
 
 @app.get("/")
 async def root():

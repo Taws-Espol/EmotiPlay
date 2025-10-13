@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 router = APIRouter(prefix="/api")
 
-@router.websocket("/ws/emotion")
+@router.websocket("/ws/emotion_detection")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     try:
@@ -27,7 +27,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
             processed_frame, emotion = await asyncio.to_thread(recognizer.frame_processing, frame)
 
-            _, buffer = cv2.imencode(".jpg", frame)
+            _, buffer = cv2.imencode(".jpg", processed_frame)
             encoded_frame = base64.b64encode(buffer).decode()
             res = EmotionDetectionResponse(emotion=emotion, frame=encoded_frame)
             await websocket.send_text(res.model_dump_json())
