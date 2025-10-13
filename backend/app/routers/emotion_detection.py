@@ -4,12 +4,14 @@ import cv2
 import numpy as np
 from fastapi import APIRouter, WebSocket
 from app.services.emotion_detection_service import recognizer
-from app.models.emotion_detection_model import EmotionDetectionResponse, EmotionFrameRequest
+from app.models.emotion_detection_model import EmotionDetectionResponse, EmotionFrameRequest, EmotionHistoryResponse
 from pydantic import ValidationError
+
+emotion_history = []
 
 router = APIRouter(prefix="/api")
 
-@router.websocket("/ws/emotion_detection")
+@router.websocket("/ws/emotions/detect")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     try:
@@ -34,3 +36,7 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         print("❌ WebSocket closed:", e)
         await websocket.close()
+
+@router.get("/emotions/history", response_model=EmotionHistoryResponse)
+async def history():
+    return EmotionHistoryResponse( history=emotion_history )
