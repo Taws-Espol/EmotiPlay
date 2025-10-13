@@ -7,6 +7,6 @@ class EmotionDetectionResponse(BaseModel):
     emotion: str
     frame: str
 
-class EmotionHisotryResponse(BaseModel):
+class EmotionHistoryResponse(BaseModel):
     history: list[str]
 
