@@ -23,6 +23,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.send_text(f"Invalid data {e}")
                 continue
 
+            # Adaptar el codigo con lo que se use al final (revisar app.services.emotion_detection_service)
+            # Y mantener el recognizer
             frame_bytes = base64.b64decode(req.frame)
             np_arr = np.frombuffer(frame_bytes, np.uint8)
             frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
