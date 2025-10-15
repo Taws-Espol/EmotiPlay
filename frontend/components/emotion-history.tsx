@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Smile, Frown, Meh, Angry, Sunrise as Surprise, Heart, Clock } from "lucide-react"
+import { Smile, Frown, Meh, Angry, Zap as Surprise, Heart, Clock } from "lucide-react"
 
 type Emotion = "feliz" | "triste" | "neutral" | "enojado" | "sorprendido" | "amor"
 
@@ -51,7 +51,7 @@ export default function EmotionHistory({ data }: { data: EmotionData[] }) {
       <ScrollArea className="h-[300px] pr-4">
         <div className="space-y-3">
           {reversedData.map((item, index) => {
-            const Icon = emotionIcons[item.emotion]
+            const Icon = emotionIcons[item.emotion] || Meh
             return (
               <div
                 key={index}

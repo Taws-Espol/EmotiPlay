@@ -6,7 +6,7 @@ import { useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Video, VideoOff, Smile, Frown, Meh, Angry, Sunrise as Surprise, Heart, Music, Sparkles, AlertCircle } from "lucide-react"
+import { Video, VideoOff, Smile, Frown, Meh, Angry, Zap as Surprise, Heart, Music, Sparkles, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import EmotionChart from "./emotion-chart"
 import EmotionHistory from "./emotion-history"
@@ -45,20 +45,38 @@ const emotionLabels = {
 }
 
 export default function EmotionRecognition() {
-  const { videoRef, canvasRef, isActive, error: cameraError, startCamera, stopCamera, captureFrame } = useCamera()
+  const { 
+    videoRef, 
+    canvasRef, 
+    isActive, 
+    error: cameraError, 
+    startCamera, 
+    stopCamera, 
+    captureFrame,
+    hasPermission 
+  } = useCamera()
   
-  const { currentEmotion, isDetecting, error: detectionError, startDetection, stopDetection } = useEmotionDetection({
+  const { 
+    currentEmotion, 
+    isDetecting, 
+    isConnected,
+    error: detectionError, 
+    startDetection, 
+    stopDetection 
+  } = useEmotionDetection({
     interval: 2000,
   })
 
-  const { history, addEmotion } = useEmotionHistory()
+  const { history, addEmotion, getStats } = useEmotionHistory()
 
+  // Agregar emoción al historial cuando se detecte
   useEffect(() => {
     if (currentEmotion) {
       addEmotion(currentEmotion)
     }
   }, [currentEmotion, addEmotion])
 
+  // Toggle camera
   const handleToggleCamera = async () => {
     if (isActive) {
       stopCamera()
@@ -68,6 +86,7 @@ export default function EmotionRecognition() {
     }
   }
 
+  // Iniciar/detener detección cuando la cámara cambie de estado
   useEffect(() => {
     if (isActive && !isDetecting) {
       startDetection(captureFrame)
@@ -75,11 +94,31 @@ export default function EmotionRecognition() {
       stopDetection()
     }
   }, [isActive, isDetecting, startDetection, stopDetection, captureFrame])
+  
+  const EmotionIcon = currentEmotion && emotionIcons[currentEmotion.emotion] ? emotionIcons[currentEmotion.emotion] : Meh
+  const stats = getStats()
 
-  const EmotionIcon = currentEmotion ? emotionIcons[currentEmotion.emotion] : Smile
+  // DEBUG: detectar imports/exports undefined
+  useEffect(() => {
+    const suspects: Record<string, any> = {
+      Card, Button, Badge, Alert, AlertDescription,
+      Video, VideoOff, Smile, Frown, Meh, Angry, Surprise, Heart, Sparkles, AlertCircle,
+      EmotionChart, EmotionHistory, SpotifyPlayer,
+      useCamera, useEmotionDetection, useEmotionHistory,
+    }
+
+    Object.entries(suspects).forEach(([name, val]) => {
+      if (val === undefined) {
+        console.error(`IMPORT INVALIDO: ${name} is undefined`)
+      } else {
+        console.debug(`IMPORT OK: ${name}`)
+      }
+    })
+  }, [])
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
+      {/* Header */}
       <div className="text-center mb-12 animate-slide-up">
         <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30">
           <Sparkles className="w-4 h-4 text-primary animate-pulse" />
@@ -94,9 +133,11 @@ export default function EmotionRecognition() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
+        {/* Video Feed */}
         <div className="lg:col-span-2 space-y-6">
           <Card className="overflow-hidden border-2 shadow-xl bg-gradient-to-br from-card to-muted/30 hover-lift transition-all duration-300">
             <div className="relative bg-black aspect-video flex items-center justify-center overflow-hidden">
+              {/* Efectos de fondo animados */}
               {isActive && (
                 <div className="absolute inset-0 opacity-20">
                   <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-primary/30 rounded-full blur-3xl animate-float" />
@@ -111,6 +152,7 @@ export default function EmotionRecognition() {
                 </div>
               )}
 
+              {/* Video */}
               <video
                 ref={videoRef}
                 autoPlay
@@ -119,13 +161,19 @@ export default function EmotionRecognition() {
                 className={`w-full h-full object-cover transition-all duration-500 ${!isActive ? "hidden" : "animate-scale-in"}`}
               />
               <canvas ref={canvasRef} className="hidden" />
+              
+              {/* Placeholder cuando no hay video */}
               {!isActive && (
                 <div className="text-center text-muted-foreground p-8 animate-float">
                   <VideoOff className="w-24 h-24 mx-auto mb-4 opacity-50" />
                   <p className="text-lg">Activa la cámara para comenzar</p>
+                  {!hasPermission && (
+                    <p className="text-sm mt-2">Se solicitarán permisos de cámara</p>
+                  )}
                 </div>
               )}
 
+              {/* Overlay con emoción actual */}
               {currentEmotion && isActive && (
                 <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-sm rounded-lg p-3">
                   <div className="flex items-center gap-2">
@@ -141,13 +189,41 @@ export default function EmotionRecognition() {
                   </div>
                 </div>
               )}
+
+              {/* Badge de estado de conexión */}
+              {isActive && (
+                <div className="absolute top-4 right-4 flex gap-2">
+                  <Badge
+                    variant="outline"
+                    className={`px-4 py-2 text-sm animate-scale-in ${
+                      isConnected 
+                        ? 'border-green-500/50 bg-green-500/10' 
+                        : 'border-yellow-500/50 bg-yellow-500/10'
+                    }`}
+                  >
+                    <span className="relative flex h-2 w-2 mr-2">
+                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${
+                        isConnected ? 'bg-green-400' : 'bg-yellow-400'
+                      } opacity-75`}></span>
+                      <span className={`relative inline-flex rounded-full h-2 w-2 ${
+                        isConnected ? 'bg-green-500' : 'bg-yellow-500'
+                      }`}></span>
+                    </span>
+                    {isConnected ? 'Conectado' : 'Conectando...'}
+                  </Badge>
+                </div>
+              )}
             </div>
 
+            {/* Controles */}
             <div className="p-6 bg-card/95 backdrop-blur-sm">
+              {/* Alertas de error */}
               {(cameraError || detectionError) && (
                 <Alert variant="destructive" className="mb-4">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{cameraError || detectionError}</AlertDescription>
+                  <AlertDescription>
+                    {cameraError || detectionError}
+                  </AlertDescription>
                 </Alert>
               )}
 
@@ -171,26 +247,28 @@ export default function EmotionRecognition() {
                   )}
                 </Button>
 
-                {isActive && (
+                {isActive && isDetecting && (
                   <Badge
                     variant="outline"
-                    className="px-4 py-2 text-sm border-green-500/50 bg-green-500/10 animate-scale-in"
+                    className="px-4 py-2 text-sm border-blue-500/50 bg-blue-500/10 animate-scale-in"
                   >
                     <span className="relative flex h-2 w-2 mr-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                     </span>
-                    En vivo
+                    Detectando
                   </Badge>
                 )}
               </div>
             </div>
           </Card>
 
+          {/* Spotify Player */}
           <div className="animate-slide-up" style={{ animationDelay: "0.1s" }}>
             <SpotifyPlayer currentEmotion={currentEmotion?.emotion} enabled={false} />
           </div>
 
+          {/* Emotion Chart */}
           {history.length > 0 && (
             <div className="animate-slide-up" style={{ animationDelay: "0.2s" }}>
               <EmotionChart data={history} />
@@ -198,7 +276,9 @@ export default function EmotionRecognition() {
           )}
         </div>
 
+        {/* Sidebar */}
         <div className="space-y-6">
+          {/* Emoción Actual */}
           <Card className="p-6 shadow-xl border-2 bg-gradient-to-br from-card to-primary/5 hover-lift animate-slide-up">
             <h2 className="text-xl font-semibold mb-4">Emoción Actual</h2>
             {currentEmotion ? (
@@ -214,7 +294,9 @@ export default function EmotionRecognition() {
                   <h3 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                     {emotionLabels[currentEmotion.emotion]}
                   </h3>
-                  <p className="text-muted-foreground">Confianza: {(currentEmotion.confidence * 100).toFixed(1)}%</p>
+                  <p className="text-muted-foreground">
+                    Confianza: {(currentEmotion.confidence * 100).toFixed(1)}%
+                  </p>
                 </div>
                 <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
                   <div
@@ -233,12 +315,37 @@ export default function EmotionRecognition() {
             )}
           </Card>
 
+          {/* Estadísticas */}
+          {stats.total > 0 && (
+            <Card className="p-6 shadow-xl border-2 hover-lift animate-slide-up" style={{ animationDelay: "0.1s" }}>
+              <h2 className="text-xl font-semibold mb-4">Estadísticas</h2>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Total detectado</span>
+                  <span className="font-semibold">{stats.total}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Emoción dominante</span>
+                  <Badge variant="outline" className="font-semibold">
+                    {stats.dominant ? emotionLabels[stats.dominant] : 'N/A'}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Confianza promedio</span>
+                  <span className="font-semibold">{(stats.averageConfidence * 100).toFixed(1)}%</span>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Emotion History */}
           {history.length > 0 && (
             <div className="animate-slide-up" style={{ animationDelay: "0.2s" }}>
               <EmotionHistory data={history} />
             </div>
           )}
 
+          {/* Info Card */}
           <Card
             className="p-6 glass-effect hover-lift animate-slide-up transition-all duration-300"
             style={{ animationDelay: "0.3s" }}
@@ -267,6 +374,13 @@ export default function EmotionRecognition() {
                 <span
                   className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"
                   style={{ animationDelay: "0.6s" }}
+                />
+                WebSocket en tiempo real
+              </li>
+              <li className="flex items-center gap-2 transition-all duration-200 hover:translate-x-1">
+                <span
+                  className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"
+                  style={{ animationDelay: "0.8s" }}
                 />
                 Historial de sesión
               </li>

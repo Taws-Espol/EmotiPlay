@@ -34,7 +34,14 @@ const emotionLabels: Record<Emotion, string> = {
 
 export default function EmotionChart({ data }: { data: EmotionData[] }) {
   const chartData = useMemo(() => {
-    const emotionCounts = data.reduce(
+    // Filtrar datos válidos
+    const validData = data.filter(
+      item => item?.emotion && item.emotion in emotionColors
+    )
+
+    if (validData.length === 0) return []
+
+    const emotionCounts = validData.reduce(
       (acc, item) => {
         acc[item.emotion] = (acc[item.emotion] || 0) + 1
         return acc
@@ -42,11 +49,13 @@ export default function EmotionChart({ data }: { data: EmotionData[] }) {
       {} as Record<Emotion, number>,
     )
 
-    return Object.entries(emotionCounts).map(([emotion, count]) => ({
-      emotion: emotionLabels[emotion as Emotion],
-      count,
-      color: emotionColors[emotion as Emotion],
-    }))
+    return Object.entries(emotionCounts)
+      .map(([emotion, count]) => ({
+        emotion: emotionLabels[emotion as Emotion],
+        count,
+        color: emotionColors[emotion as Emotion],
+      }))
+      .sort((a, b) => b.count - a.count) // Ordenar por frecuencia
   }, [data])
 
   if (chartData.length === 0) {
@@ -60,7 +69,7 @@ export default function EmotionChart({ data }: { data: EmotionData[] }) {
         <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
           <XAxis dataKey="emotion" tick={{ fontSize: 12 }} angle={-45} textAnchor="end" height={80} />
-          <YAxis tick={{ fontSize: 12 }} />
+          <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
           <Tooltip
             contentStyle={{
               backgroundColor: "hsl(var(--card))",
