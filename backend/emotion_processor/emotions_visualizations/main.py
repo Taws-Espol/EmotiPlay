@@ -5,13 +5,13 @@ import numpy as np
 class EmotionsVisualization:
     def __init__(self):
         self.emotion_colors = {
-            'surprise': (184, 183, 83),
-            'angry': (35, 50, 220),
-            'disgust': (79, 164, 36),
-            'sad': (186, 119, 4),
-            'happy': (27, 151, 239),
-            'fear': (128, 37, 146)
-        }
+                'happy': (255, 223, 0),
+                'sad': (0, 102, 204),
+                'angry': (204, 0, 0),
+                'surprise': (255, 128, 0),
+                'disgust': (0, 153, 0),
+                'fear': (153, 51, 204)
+                }
 
     def main(self, emotions: dict, original_image: np.ndarray):
         for i, (emotion, score) in enumerate(emotions.items()):
