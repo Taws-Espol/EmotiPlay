@@ -1,7 +1,10 @@
+// frontend/components/emotion-chart.tsx
+
 "use client"
 
 import { Card } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts"
+import { useMemo } from "react"
 
 type Emotion = "feliz" | "triste" | "neutral" | "enojado" | "sorprendido" | "amor"
 
@@ -30,19 +33,25 @@ const emotionLabels: Record<Emotion, string> = {
 }
 
 export default function EmotionChart({ data }: { data: EmotionData[] }) {
-  const emotionCounts = data.reduce(
-    (acc, item) => {
-      acc[item.emotion] = (acc[item.emotion] || 0) + 1
-      return acc
-    },
-    {} as Record<Emotion, number>,
-  )
+  const chartData = useMemo(() => {
+    const emotionCounts = data.reduce(
+      (acc, item) => {
+        acc[item.emotion] = (acc[item.emotion] || 0) + 1
+        return acc
+      },
+      {} as Record<Emotion, number>,
+    )
 
-  const chartData = Object.entries(emotionCounts).map(([emotion, count]) => ({
-    emotion: emotionLabels[emotion as Emotion],
-    count,
-    color: emotionColors[emotion as Emotion],
-  }))
+    return Object.entries(emotionCounts).map(([emotion, count]) => ({
+      emotion: emotionLabels[emotion as Emotion],
+      count,
+      color: emotionColors[emotion as Emotion],
+    }))
+  }, [data])
+
+  if (chartData.length === 0) {
+    return null
+  }
 
   return (
     <Card className="p-6 shadow-xl border-2 hover-lift transition-all duration-300 animate-scale-in">
