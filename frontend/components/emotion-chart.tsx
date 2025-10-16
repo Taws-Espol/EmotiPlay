@@ -230,7 +230,7 @@ export default function EmotionChart({ data }: { data: EmotionData[] }) {
                     axisLine={{ stroke: "hsl(var(--border))" }}
                     tickLine={{ stroke: "hsl(var(--border))" }}
                   />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip />} cursor={false} />
                   <Bar dataKey="count" radius={[6, 6, 0, 0]} animationDuration={1200}>
                     {chartData.map((entry, index) => (
                       <Cell 
@@ -265,7 +265,7 @@ export default function EmotionChart({ data }: { data: EmotionData[] }) {
                       />
                     ))}
                   </Pie>
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip />} cursor={false} />
                 </PieChart>
               )}
             </ResponsiveContainer>
