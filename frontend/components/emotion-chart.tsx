@@ -151,12 +151,10 @@ export default function EmotionChart({ data }: { data: EmotionData[] }) {
     <Card className="p-6 shadow-xl border-2 hover-lift transition-all duration-300 animate-scale-in">
       <style jsx>{`
         .emotion-bar:hover {
-          filter: brightness(1.2) saturate(1.1);
-          transition: filter 0.2s ease-in-out;
+          /* Sin cambios visuales en la barra, solo tooltip */
         }
         .emotion-pie:hover {
-          filter: brightness(1.2) saturate(1.1);
-          transition: filter 0.2s ease-in-out;
+          /* Sin cambios visuales en el pie, solo tooltip */
         }
       `}</style>
       <div className="flex items-center justify-between mb-6">
