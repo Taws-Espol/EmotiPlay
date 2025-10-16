@@ -21,7 +21,7 @@ SCOPES = "user-read-private user-read-email user-modify-playback-state user-read
 def login():
     """Inicia el proceso de autenticación de Spotify."""
     auth_url = (
-        "https://accounts.spotify.com/authorize?"
+        "https://accounts.spotify.com/authorize"
         f"client_id={CLIENT_ID}&"
         f"response_type=code&"
         f"redirect_uri={REDIRECT_URI}&"
@@ -45,7 +45,7 @@ def spotify_callback(code: str):
     
     # 2. Preparar el cuerpo de la petición (data)
     data = {
-        'grant_type': 'authorization_code',
+        'grant_type': 'client_credentials',
         'code': code,
         'redirect_uri': REDIRECT_URI
     }
