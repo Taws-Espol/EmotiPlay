@@ -11,6 +11,7 @@ type Emotion = "feliz" | "triste" | "neutral" | "enojado" | "sorprendido" | "amo
 interface SpotifyPlayerProps {
   currentEmotion?: Emotion
   enabled: boolean
+  onToggleEnabled?: () => void
 }
 
 // Playlists de Spotify según emociones
@@ -53,7 +54,7 @@ const emotionPlaylists = {
   },
 }
 
-export default function SpotifyPlayer({ currentEmotion, enabled }: SpotifyPlayerProps) {
+export default function SpotifyPlayer({ currentEmotion, enabled, onToggleEnabled }: SpotifyPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTrack, setCurrentTrack] = useState<string>("Esperando emoción...")
 
@@ -70,12 +71,22 @@ export default function SpotifyPlayer({ currentEmotion, enabled }: SpotifyPlayer
   if (!enabled) {
     return (
       <Card className="p-6 border-2 shadow-xl bg-gradient-to-br from-card to-muted/30 hover-lift transition-all duration-300">
-        <div className="flex items-center gap-4 text-muted-foreground">
-          <Music className="w-12 h-12 opacity-50 animate-float" />
-          <div>
-            <h3 className="font-semibold text-foreground mb-1">Spotify Desactivado</h3>
-            <p className="text-sm">Activa Spotify para cambiar música según tu emoción</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 text-muted-foreground">
+            <Music className="w-12 h-12 opacity-50 animate-float" />
+            <div>
+              <h3 className="font-semibold text-foreground mb-1">Spotify Desactivado</h3>
+              <p className="text-sm">Activa Spotify para cambiar música según tu emoción</p>
+            </div>
           </div>
+          {onToggleEnabled && (
+            <Button
+              onClick={onToggleEnabled}
+              className="transition-all duration-300 hover:scale-105 bg-green-500 hover:bg-green-600"
+            >
+              Activar Spotify
+            </Button>
+          )}
         </div>
       </Card>
     )
@@ -97,13 +108,25 @@ export default function SpotifyPlayer({ currentEmotion, enabled }: SpotifyPlayer
             <p className="text-sm text-muted-foreground">{playlist?.description || "Esperando emoción..."}</p>
           </div>
         </div>
-        <Badge variant="outline" className="bg-green-500/10 border-green-500/50 animate-scale-in">
-          <span className="relative flex h-2 w-2 mr-2">
-            <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-          </span>
-          Conectado
-        </Badge>
+        <div className="flex items-center gap-3">
+          <Badge variant="outline" className="bg-green-500/10 border-green-500/50 animate-scale-in">
+            <span className="relative flex h-2 w-2 mr-2">
+              <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
+            Conectado
+          </Badge>
+          {onToggleEnabled && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onToggleEnabled}
+              className="transition-all duration-300 hover:scale-105 border-red-500/50 hover:bg-red-500/10 hover:border-red-500"
+            >
+              Desactivar
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -143,24 +166,29 @@ export default function SpotifyPlayer({ currentEmotion, enabled }: SpotifyPlayer
           </Button>
         </div>
 
-        <div className="flex items-center gap-3 px-4">
-          <Volume2 className="w-4 h-4 text-muted-foreground" />
-          <div className="flex-1 bg-muted rounded-full h-1.5 overflow-hidden">
-            <div
-              className="bg-gradient-to-r from-green-500 to-green-400 h-full rounded-full transition-all duration-300"
-              style={{ width: "70%" }}
-            />
+        <div className="flex items-center justify-between gap-4">
+          {/* Volume Indicator - Smaller and more aesthetic */}
+          <div className="flex items-center gap-2 flex-1">
+            <Volume2 className="w-3 h-3 text-muted-foreground/70" />
+            <div className="flex-1 bg-muted/50 rounded-full h-1 overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-green-500 to-green-400 h-full rounded-full transition-all duration-300"
+                style={{ width: "70%" }}
+              />
+            </div>
           </div>
-        </div>
 
-        {currentEmotion && (
-          <div className="text-center text-sm text-muted-foreground animate-slide-up">
-            Playlist seleccionada para:{" "}
-            <span className="font-semibold text-foreground bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              {currentEmotion}
-            </span>
-          </div>
-        )}
+          {/* Emotion Identified - Right side */}
+          {currentEmotion && (
+            <div className="text-right animate-slide-up">
+              <div className="text-sm font-semibold text-foreground mb-2">Emoción Identificada</div>
+              <div className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent capitalize mb-1">
+                {currentEmotion}
+              </div>
+              <div className="text-xs text-muted-foreground">Playlist elegida para esta emoción</div>
+            </div>
+          )}
+        </div>
       </div>
     </Card>
   )
