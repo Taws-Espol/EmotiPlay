@@ -202,7 +202,11 @@ export default function EmotionRecognition() {
 
           {/* Spotify Player */}
           <div className="animate-slide-up" style={{ animationDelay: "0.1s" }}>
-            <SpotifyPlayer currentEmotion={currentEmotion?.emotion} enabled={spotifyEnabled} />
+            <SpotifyPlayer 
+              currentEmotion={currentEmotion?.emotion} 
+              enabled={spotifyEnabled} 
+              onToggleEnabled={() => setSpotifyEnabled(!spotifyEnabled)}
+            />
           </div>
 
           {/* Emotion Chart */}
@@ -250,31 +254,6 @@ export default function EmotionRecognition() {
             )}
           </Card>
 
-          {/* Spotify Control */}
-          <Card
-            className="p-6 shadow-xl border-2 bg-gradient-to-br from-card to-accent/5 hover-lift animate-slide-up transition-all duration-300"
-            style={{ animationDelay: "0.1s" }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
-                <Music className="w-5 h-5 animate-pulse" />
-                Spotify
-              </h2>
-              <Button
-                variant={spotifyEnabled ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSpotifyEnabled(!spotifyEnabled)}
-                className="transition-all duration-300 hover:scale-105"
-              >
-                {spotifyEnabled ? "Activado" : "Activar"}
-              </Button>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {spotifyEnabled
-                ? "La música cambiará según tu emoción detectada"
-                : "Activa para cambiar música automáticamente"}
-            </p>
-          </Card>
 
           {/* Emotion History */}
           {emotionHistory.length > 0 && (
