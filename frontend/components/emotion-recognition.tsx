@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Video, VideoOff, Smile, Frown, Meh, Angry, Sunrise as Surprise, Heart, Music, Sparkles } from "lucide-react"
+import { Video, VideoOff, Smile, Frown, Meh, Angry, Sunrise as Surprise, Heart, Music, Sparkles, Eye, AlertCircle } from "lucide-react"
 import EmotionChart from "./emotion-chart"
 import EmotionHistory from "./emotion-history"
 import SpotifyPlayer from "./spotify-player"
@@ -44,15 +44,39 @@ const emotionLabels = {
   amor: "Amor",
 }
 
+type CameraStatus = "detecting" | "no-face" | "error"
+
 export default function EmotionRecognition() {
   const [isActive, setIsActive] = useState(false)
   const [currentEmotion, setCurrentEmotion] = useState<EmotionData | null>(null)
   const [emotionHistory, setEmotionHistory] = useState<EmotionData[]>([])
   const [spotifyEnabled, setSpotifyEnabled] = useState(false)
+  const [cameraStatus, setCameraStatus] = useState<CameraStatus>("detecting")
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const detectEmotion = () => {
+    // Simular diferentes estados de detección
+    /* //Solo colocado para efectos de visualización
+    const randomState = Math.random()
+    
+    if (randomState < 0.1) {
+      // 10% - Sin rostro detectado
+      setCameraStatus("no-face")
+      setCurrentEmotion(null)
+      return
+    }
+    
+    if (randomState < 0.15) {
+      // 5% - Error de detección
+      setCameraStatus("error")
+      setCurrentEmotion(null)
+      return
+    }
+    
+    // 85% - Detección exitosa
+    setCameraStatus("detecting")
+    */
     const emotions: Emotion[] = ["feliz", "triste", "neutral", "enojado", "sorprendido", "amor"]
     const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)]
     const confidence = Math.random() * 0.3 + 0.7 // 70-100%
@@ -69,6 +93,7 @@ export default function EmotionRecognition() {
 
   const startCamera = async () => {
     try {
+      setCameraStatus("detecting")
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: 640, height: 480 },
       })
@@ -76,12 +101,14 @@ export default function EmotionRecognition() {
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         setIsActive(true)
+        setCameraStatus("detecting")
 
         const interval = setInterval(detectEmotion, 2000)
         return () => clearInterval(interval)
       }
     } catch (error) {
       console.error("Error al acceder a la cámara:", error)
+      setCameraStatus("error")
       alert("No se pudo acceder a la cámara. Por favor, verifica los permisos.")
     }
   }
@@ -111,6 +138,49 @@ export default function EmotionRecognition() {
   }, [])
 
   const EmotionIcon = currentEmotion ? emotionIcons[currentEmotion.emotion] : Smile
+
+  const getStatusNotification = () => {
+    if (!isActive) return null
+
+    const statusConfig = {
+      detecting: {
+        icon: Eye,
+        text: "Detectando emociones...",
+        color: "text-blue-500",
+        bgColor: "bg-blue-500/10",
+        borderColor: "border-blue-500/20",
+        iconColor: "text-blue-500"
+      },
+      "no-face": {
+        icon: AlertCircle,
+        text: "No se detecta rostro",
+        color: "text-yellow-500",
+        bgColor: "bg-yellow-500/10",
+        borderColor: "border-yellow-500/20",
+        iconColor: "text-yellow-500"
+      },
+      error: {
+        icon: AlertCircle,
+        text: "Error en la detección",
+        color: "text-red-500",
+        bgColor: "bg-red-500/10",
+        borderColor: "border-red-500/20",
+        iconColor: "text-red-500"
+      },
+    }
+
+    const config = statusConfig[cameraStatus]
+    const Icon = config.icon
+
+    return (
+      <div className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${config.bgColor} ${config.borderColor} animate-slide-up`}>
+        <Icon className={`w-5 h-5 ${config.iconColor} animate-pulse`} />
+        <span className={`text-sm font-medium ${config.color}`}>
+          {config.text}
+        </span>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -162,6 +232,9 @@ export default function EmotionRecognition() {
                 </div>
               )}
             </div>
+
+            {/* Status Notification */}
+            {getStatusNotification()}
 
             <div className="p-6 bg-card/95 backdrop-blur-sm">
               <div className="flex items-center justify-between gap-4">
