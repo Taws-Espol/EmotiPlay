@@ -27,12 +27,12 @@ const emotionIcons = {
 }
 
 const emotionColors = {
-  feliz: "text-yellow-500",
-  triste: "text-blue-500",
-  neutral: "text-gray-500",
-  enojado: "text-red-500",
-  sorprendido: "text-purple-500",
-  amor: "text-pink-500",
+  feliz: "text-amber-400",
+  triste: "text-blue-400",
+  neutral: "text-gray-400",
+  enojado: "text-red-400",
+  sorprendido: "text-violet-400",
+  amor: "text-pink-400",
 }
 
 const emotionLabels = {
