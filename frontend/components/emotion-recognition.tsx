@@ -282,48 +282,6 @@ export default function EmotionRecognition() {
               <EmotionHistory data={emotionHistory} />
             </div>
           )}
-
-          {/* Info Card */}
-          <Card
-            className="p-6 glass-effect hover-lift animate-slide-up transition-all duration-300"
-            style={{ animationDelay: "0.3s" }}
-          >
-            <h3 className="font-semibold mb-3 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary animate-pulse" />
-              Información
-            </h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-center gap-2 transition-all duration-200 hover:translate-x-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                Detección en tiempo real
-              </li>
-              <li className="flex items-center gap-2 transition-all duration-200 hover:translate-x-1">
-                <span
-                  className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"
-                  style={{ animationDelay: "0.2s" }}
-                />
-                6 emociones diferentes
-              </li>
-              <li className="flex items-center gap-2 transition-all duration-200 hover:translate-x-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" style={{ animationDelay: "0.4s" }} />
-                Integración con Spotify
-              </li>
-              <li className="flex items-center gap-2 transition-all duration-200 hover:translate-x-1">
-                <span
-                  className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"
-                  style={{ animationDelay: "0.6s" }}
-                />
-                Música según tu emoción
-              </li>
-              <li className="flex items-center gap-2 transition-all duration-200 hover:translate-x-1">
-                <span
-                  className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"
-                  style={{ animationDelay: "0.8s" }}
-                />
-                Historial de emociones
-              </li>
-            </ul>
-          </Card>
         </div>
       </div>
     </div>
