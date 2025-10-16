@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Video, VideoOff, Smile, Frown, Meh, Angry, Sunrise as Surprise, Heart, Music, Sparkles } from "lucide-react"
+import { Video, VideoOff, Smile, Frown, Meh, Angry, Sunrise as Surprise, Heart, Music, Sparkles, Eye, AlertCircle } from "lucide-react"
 import EmotionChart from "./emotion-chart"
 import EmotionHistory from "./emotion-history"
 import SpotifyPlayer from "./spotify-player"
@@ -27,12 +27,12 @@ const emotionIcons = {
 }
 
 const emotionColors = {
-  feliz: "text-yellow-500",
-  triste: "text-blue-500",
-  neutral: "text-gray-500",
-  enojado: "text-red-500",
-  sorprendido: "text-purple-500",
-  amor: "text-pink-500",
+  feliz: "text-amber-400",
+  triste: "text-blue-400",
+  neutral: "text-gray-400",
+  enojado: "text-red-400",
+  sorprendido: "text-violet-400",
+  amor: "text-pink-400",
 }
 
 const emotionLabels = {
@@ -44,15 +44,39 @@ const emotionLabels = {
   amor: "Amor",
 }
 
+type CameraStatus = "detecting" | "no-face" | "error"
+
 export default function EmotionRecognition() {
   const [isActive, setIsActive] = useState(false)
   const [currentEmotion, setCurrentEmotion] = useState<EmotionData | null>(null)
   const [emotionHistory, setEmotionHistory] = useState<EmotionData[]>([])
   const [spotifyEnabled, setSpotifyEnabled] = useState(false)
+  const [cameraStatus, setCameraStatus] = useState<CameraStatus>("detecting")
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const detectEmotion = () => {
+    // Simular diferentes estados de detección
+    /* //Solo colocado para efectos de visualización
+    const randomState = Math.random()
+    
+    if (randomState < 0.1) {
+      // 10% - Sin rostro detectado
+      setCameraStatus("no-face")
+      setCurrentEmotion(null)
+      return
+    }
+    
+    if (randomState < 0.15) {
+      // 5% - Error de detección
+      setCameraStatus("error")
+      setCurrentEmotion(null)
+      return
+    }
+    
+    // 85% - Detección exitosa
+    setCameraStatus("detecting")
+    */
     const emotions: Emotion[] = ["feliz", "triste", "neutral", "enojado", "sorprendido", "amor"]
     const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)]
     const confidence = Math.random() * 0.3 + 0.7 // 70-100%
@@ -69,6 +93,7 @@ export default function EmotionRecognition() {
 
   const startCamera = async () => {
     try {
+      setCameraStatus("detecting")
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: 640, height: 480 },
       })
@@ -76,12 +101,14 @@ export default function EmotionRecognition() {
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         setIsActive(true)
+        setCameraStatus("detecting")
 
         const interval = setInterval(detectEmotion, 2000)
         return () => clearInterval(interval)
       }
     } catch (error) {
       console.error("Error al acceder a la cámara:", error)
+      setCameraStatus("error")
       alert("No se pudo acceder a la cámara. Por favor, verifica los permisos.")
     }
   }
@@ -111,6 +138,49 @@ export default function EmotionRecognition() {
   }, [])
 
   const EmotionIcon = currentEmotion ? emotionIcons[currentEmotion.emotion] : Smile
+
+  const getStatusNotification = () => {
+    if (!isActive) return null
+
+    const statusConfig = {
+      detecting: {
+        icon: Eye,
+        text: "Detectando emociones...",
+        color: "text-blue-500",
+        bgColor: "bg-blue-500/10",
+        borderColor: "border-blue-500/20",
+        iconColor: "text-blue-500"
+      },
+      "no-face": {
+        icon: AlertCircle,
+        text: "No se detecta rostro",
+        color: "text-yellow-500",
+        bgColor: "bg-yellow-500/10",
+        borderColor: "border-yellow-500/20",
+        iconColor: "text-yellow-500"
+      },
+      error: {
+        icon: AlertCircle,
+        text: "Error en la detección",
+        color: "text-red-500",
+        bgColor: "bg-red-500/10",
+        borderColor: "border-red-500/20",
+        iconColor: "text-red-500"
+      },
+    }
+
+    const config = statusConfig[cameraStatus]
+    const Icon = config.icon
+
+    return (
+      <div className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${config.bgColor} ${config.borderColor} animate-slide-up`}>
+        <Icon className={`w-5 h-5 ${config.iconColor} animate-pulse`} />
+        <span className={`text-sm font-medium ${config.color}`}>
+          {config.text}
+        </span>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -163,6 +233,9 @@ export default function EmotionRecognition() {
               )}
             </div>
 
+            {/* Status Notification */}
+            {getStatusNotification()}
+
             <div className="p-6 bg-card/95 backdrop-blur-sm">
               <div className="flex items-center justify-between gap-4">
                 <Button
@@ -202,7 +275,11 @@ export default function EmotionRecognition() {
 
           {/* Spotify Player */}
           <div className="animate-slide-up" style={{ animationDelay: "0.1s" }}>
-            <SpotifyPlayer currentEmotion={currentEmotion?.emotion} enabled={spotifyEnabled} />
+            <SpotifyPlayer 
+              currentEmotion={currentEmotion?.emotion} 
+              enabled={spotifyEnabled} 
+              onToggleEnabled={() => setSpotifyEnabled(!spotifyEnabled)}
+            />
           </div>
 
           {/* Emotion Chart */}
@@ -250,31 +327,6 @@ export default function EmotionRecognition() {
             )}
           </Card>
 
-          {/* Spotify Control */}
-          <Card
-            className="p-6 shadow-xl border-2 bg-gradient-to-br from-card to-accent/5 hover-lift animate-slide-up transition-all duration-300"
-            style={{ animationDelay: "0.1s" }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
-                <Music className="w-5 h-5 animate-pulse" />
-                Spotify
-              </h2>
-              <Button
-                variant={spotifyEnabled ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSpotifyEnabled(!spotifyEnabled)}
-                className="transition-all duration-300 hover:scale-105"
-              >
-                {spotifyEnabled ? "Activado" : "Activar"}
-              </Button>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {spotifyEnabled
-                ? "La música cambiará según tu emoción detectada"
-                : "Activa para cambiar música automáticamente"}
-            </p>
-          </Card>
 
           {/* Emotion History */}
           {emotionHistory.length > 0 && (
@@ -282,48 +334,6 @@ export default function EmotionRecognition() {
               <EmotionHistory data={emotionHistory} />
             </div>
           )}
-
-          {/* Info Card */}
-          <Card
-            className="p-6 glass-effect hover-lift animate-slide-up transition-all duration-300"
-            style={{ animationDelay: "0.3s" }}
-          >
-            <h3 className="font-semibold mb-3 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary animate-pulse" />
-              Información
-            </h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-center gap-2 transition-all duration-200 hover:translate-x-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                Detección en tiempo real
-              </li>
-              <li className="flex items-center gap-2 transition-all duration-200 hover:translate-x-1">
-                <span
-                  className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"
-                  style={{ animationDelay: "0.2s" }}
-                />
-                6 emociones diferentes
-              </li>
-              <li className="flex items-center gap-2 transition-all duration-200 hover:translate-x-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" style={{ animationDelay: "0.4s" }} />
-                Integración con Spotify
-              </li>
-              <li className="flex items-center gap-2 transition-all duration-200 hover:translate-x-1">
-                <span
-                  className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"
-                  style={{ animationDelay: "0.6s" }}
-                />
-                Música según tu emoción
-              </li>
-              <li className="flex items-center gap-2 transition-all duration-200 hover:translate-x-1">
-                <span
-                  className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"
-                  style={{ animationDelay: "0.8s" }}
-                />
-                Historial de emociones
-              </li>
-            </ul>
-          </Card>
         </div>
       </div>
     </div>
