@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Emotion Detection Stream</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #000;
+      font-family: Arial, sans-serif;
+    }
+
+    #videoFrame {
+      max-width: 100%;
+      border: 2px solid #0f0;
+    }
+
+    .info {
+      color: #0f0;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <img id="videoFrame" alt="Emotion Detection Stream">
+  <div class="info" id="info">Connecting...</div>
+
+  <script>
+    const ws = new WebSocket('ws://localhost:8000/api/ws/emotions/detect');
+    const img = document.getElementById('videoFrame');
+    const info = document.getElementById('info');
+
+    ws.onopen = () => {
+      info.textContent = 'Connected ✓';
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      img.src = 'data:image/jpeg;base64,' + data.frame;
+      info.textContent = `Active Tracks: ${data.active_tracks} | Clients: ${data.total_clients}`;
+    };
+
+    ws.onerror = () => {
+      info.textContent = 'Error connecting';
+    };
+
+    ws.onclose = () => {
+      info.textContent = 'Disconnected';
+    };
+  </script>
+</body>
+
+</html>

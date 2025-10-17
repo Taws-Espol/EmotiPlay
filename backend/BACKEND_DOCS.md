@@ -260,7 +260,7 @@ El backend proporciona una API REST construida con FastAPI para integración con
 **Iniciar el servidor**:
 ```bash
 cd backend
-uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 **URL base**: `http://localhost:8000`
