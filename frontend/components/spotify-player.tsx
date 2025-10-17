@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Music, Play, Pause, SkipForward, Volume2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { playEmotion, pauseMusic } from "@/lib/spotify-client"
 
 type Emotion = "feliz" | "triste" | "neutral" | "enojado" | "sorprendido" | "disgusto" | "miedo"
 
@@ -159,7 +160,23 @@ export default function SpotifyPlayer({ currentEmotion, enabled, onToggleEnabled
           <Button
             size="icon"
             className="rounded-full w-12 h-12 bg-green-500 hover:bg-green-600 transition-all duration-300 hover:scale-110 animate-pulse-glow"
-            onClick={() => setIsPlaying(!isPlaying)}
+            onClick={async () => {
+              if (isPlaying) {
+                // Pausar música
+                const success = await pauseMusic()
+                if (success) {
+                  setIsPlaying(false)
+                }
+              } else {
+                // Reanudar música (reproducir emoción actual)
+                if (currentEmotion) {
+                  const success = await playEmotion(currentEmotion)
+                  if (success) {
+                    setIsPlaying(true)
+                  }
+                }
+              }
+            }}
           >
             {isPlaying ? <Pause className="w-5 h-5" fill="white" /> : <Play className="w-5 h-5" fill="white" />}
           </Button>

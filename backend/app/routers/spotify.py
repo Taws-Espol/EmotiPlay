@@ -150,9 +150,9 @@ def play_music(request: PlaybackRequest):
     play_endpoint = f"/play?device_id={default_device_id}"
 
     play_data = {
-            "context_uri": f"{playlist[emotion]['playlist']}",
+            "context_uri": f"{playlists[emotion]['playlist']}",
             "offset": {
-                "position": rd.randint(0, playlist[emotion]['total_songs'] - 1)
+                "position": rd.randint(0, playlists[emotion]['total_songs'] - 1)
                 },
             "position_ms": 0
             }

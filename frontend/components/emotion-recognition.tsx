@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { EmotionWebSocket } from "@/lib/websocket"
+import { playEmotion } from "@/lib/spotify-client"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -60,6 +61,7 @@ export default function EmotionRecognition() {
   const imgRef = useRef<HTMLImageElement>(null)
   const lastUpdateTimeRef = useRef<number>(0)
   const lastEmotionRef = useRef<string>("")
+  const lastSpotifyEmotionRef = useRef<string>("")
 
   const startCamera = async () => {
     try {
@@ -84,6 +86,16 @@ export default function EmotionRecognition() {
             // Solo agregar al historial si cambió la emoción
             if (lastEmotionRef.current !== emotionData.emotion) {
               setEmotionHistory((prev) => [...prev.slice(-9), emotionData])
+
+              // Cambiar música de Spotify si está habilitado y cambió la emoción
+              if (spotifyEnabled && lastSpotifyEmotionRef.current !== emotionData.emotion) {
+                playEmotion(emotionData.emotion).then(success => {
+                  if (success) {
+                    console.log(`[Spotify] Cambiando música a: ${emotionData.emotion}`)
+                    lastSpotifyEmotionRef.current = emotionData.emotion
+                  }
+                })
+              }
             }
 
             setCameraStatus("detecting")
@@ -122,6 +134,7 @@ export default function EmotionRecognition() {
     // Limpiar refs
     lastUpdateTimeRef.current = 0
     lastEmotionRef.current = ""
+    lastSpotifyEmotionRef.current = ""
   }
 
   const toggleCamera = () => {
