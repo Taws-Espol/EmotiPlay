@@ -24,32 +24,36 @@ oauth_states = {}
 stored_access_token = None
 default_device_id = None
 
-playlist = {
-        "happy": {
-            'playlist' : "uri_playlist_happy",
-            'total_songs': 0
-            },
-        "surprise": {
-            'playlist' : "uri_playlist_happy",
-            'total_songs': 0
-            },
-        "sad":{
-            'playlist' : "uri_playlist_happy",
-            'total_songs': 0
-            },
-        "angry":{
-            'playlist' : "uri_playlist_happy",
-            'total_songs': 0
-            },
-        "disgust":{
-            'playlist' : "uri_playlist_happy",
-            'total_songs': 0
-            },
-        "fear":{
-            'playlist' : "uri_playlist_happy",
-            'total_songs': 0
-            },
-        }
+playlists = {
+    "neutral": {
+        'playlist': "spotify:playlist:5C5pgRdKyHeeRs1is0LXn0",
+        'total_songs': 74
+    },
+    "sad": {
+        'playlist': "spotify:playlist:37i9dQZF1DX7qK8ma5wgG1",
+        'total_songs': 80
+    },
+    "happy": {
+        'playlist': "spotify:playlist:37i9dQZF1DXdPec7aLTmlC",
+        'total_songs': 100
+    },
+    "angry": {
+        'playlist': "spotify:playlist:37i9dQZF1EIgNZCaOGb0Mi",
+        'total_songs': 50
+    },
+    "fear": {
+        'playlist': "spotify:playlist:0X5baMRrz5QDNcC1mWvBNk",
+        'total_songs': 34
+    },
+    "disgust": {
+        'playlist': "spotify:playlist:37i9dQZF1DZ06evO1VmDYs",
+        'total_songs': 50
+    },
+    "surprise": {
+        'playlist': "spotify:playlist:1yWTPF6w6efZ1eJmdpf0L3",
+        'total_songs': 26
+    }
+}
 
 @router.get("/login")
 def login():
