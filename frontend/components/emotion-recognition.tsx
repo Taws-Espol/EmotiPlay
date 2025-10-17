@@ -1,15 +1,16 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { EmotionWebSocket } from "@/lib/websocket"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Video, VideoOff, Smile, Frown, Meh, Angry, Sunrise as Surprise, Heart, Music, Sparkles, Eye, AlertCircle } from "lucide-react"
+import { Video, VideoOff, Smile, Frown, Meh, Angry, Sunrise as Surprise, Frown as Disgust, Zap as Fear, Sparkles, Eye, AlertCircle } from "lucide-react"
 import EmotionChart from "./emotion-chart"
 import EmotionHistory from "./emotion-history"
 import SpotifyPlayer from "./spotify-player"
 
-type Emotion = "feliz" | "triste" | "neutral" | "enojado" | "sorprendido" | "amor"
+type Emotion = "feliz" | "triste" | "neutral" | "enojado" | "sorprendido" | "disgusto" | "miedo"
 
 interface EmotionData {
   emotion: Emotion
@@ -23,7 +24,8 @@ const emotionIcons = {
   neutral: Meh,
   enojado: Angry,
   sorprendido: Surprise,
-  amor: Heart,
+  disgusto: Disgust,
+  miedo: Fear,
 }
 
 const emotionColors = {
@@ -32,7 +34,8 @@ const emotionColors = {
   neutral: "text-gray-400",
   enojado: "text-red-400",
   sorprendido: "text-violet-400",
-  amor: "text-pink-400",
+  disgusto: "text-green-500",
+  miedo: "text-purple-700",
 }
 
 const emotionLabels = {
@@ -41,7 +44,8 @@ const emotionLabels = {
   neutral: "Neutral",
   enojado: "Enojado",
   sorprendido: "Sorprendido",
-  amor: "Amor",
+  disgusto: "Disgusto",
+  miedo: "Miedo",
 }
 
 type CameraStatus = "detecting" | "no-face" | "error"
@@ -52,75 +56,72 @@ export default function EmotionRecognition() {
   const [emotionHistory, setEmotionHistory] = useState<EmotionData[]>([])
   const [spotifyEnabled, setSpotifyEnabled] = useState(false)
   const [cameraStatus, setCameraStatus] = useState<CameraStatus>("detecting")
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-
-  const detectEmotion = () => {
-    // Simular diferentes estados de detección
-    /* //Solo colocado para efectos de visualización
-    const randomState = Math.random()
-    
-    if (randomState < 0.1) {
-      // 10% - Sin rostro detectado
-      setCameraStatus("no-face")
-      setCurrentEmotion(null)
-      return
-    }
-    
-    if (randomState < 0.15) {
-      // 5% - Error de detección
-      setCameraStatus("error")
-      setCurrentEmotion(null)
-      return
-    }
-    
-    // 85% - Detección exitosa
-    setCameraStatus("detecting")
-    */
-    const emotions: Emotion[] = ["feliz", "triste", "neutral", "enojado", "sorprendido", "amor"]
-    const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)]
-    const confidence = Math.random() * 0.3 + 0.7 // 70-100%
-
-    const emotionData: EmotionData = {
-      emotion: randomEmotion,
-      confidence,
-      timestamp: new Date(),
-    }
-
-    setCurrentEmotion(emotionData)
-    setEmotionHistory((prev) => [...prev.slice(-9), emotionData])
-  }
+  const wsRef = useRef<EmotionWebSocket | null>(null)
+  const imgRef = useRef<HTMLImageElement>(null)
+  const lastUpdateTimeRef = useRef<number>(0)
+  const lastEmotionRef = useRef<string>("")
 
   const startCamera = async () => {
     try {
       setCameraStatus("detecting")
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480 },
-      })
+      setIsActive(true)
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        setIsActive(true)
-        setCameraStatus("detecting")
+      // Conectar WebSocket al backend
+      const ws = new EmotionWebSocket(
+        process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/api/ws/emotions/detect'
+      )
 
-        const interval = setInterval(detectEmotion, 2000)
-        return () => clearInterval(interval)
-      }
+      ws.connect(
+        // Callback para emociones detectadas (con throttling)
+        (emotionData) => {
+          const now = Date.now()
+          const timeSinceLastUpdate = now - lastUpdateTimeRef.current
+
+          // Solo actualizar si ha pasado al menos 1 segundo O si cambió la emoción
+          if (timeSinceLastUpdate >= 1000 || lastEmotionRef.current !== emotionData.emotion) {
+            setCurrentEmotion(emotionData)
+
+            // Solo agregar al historial si cambió la emoción
+            if (lastEmotionRef.current !== emotionData.emotion) {
+              setEmotionHistory((prev) => [...prev.slice(-9), emotionData])
+            }
+
+            setCameraStatus("detecting")
+            lastUpdateTimeRef.current = now
+            lastEmotionRef.current = emotionData.emotion
+          }
+        },
+        // Callback para frames procesados (CON bounding boxes)
+        // ✅ Simple como index.html - actualiza img.src directamente
+        (frameBase64) => {
+          if (imgRef.current) {
+            imgRef.current.src = `data:image/jpeg;base64,${frameBase64}`
+          }
+        }
+      )
+
+      wsRef.current = ws
+
     } catch (error) {
-      console.error("Error al acceder a la cámara:", error)
+      console.error("Error al conectar al sistema de detección:", error)
       setCameraStatus("error")
-      alert("No se pudo acceder a la cámara. Por favor, verifica los permisos.")
+      alert("No se pudo conectar al sistema de detección. Asegúrate de que el backend esté corriendo.")
     }
   }
 
   const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream
-      stream.getTracks().forEach((track) => track.stop())
-      videoRef.current.srcObject = null
-      setIsActive(false)
-      setCurrentEmotion(null)
+    if (wsRef.current) {
+      wsRef.current.disconnect()
+      wsRef.current = null
     }
+
+    setIsActive(false)
+    setCurrentEmotion(null)
+    setCameraStatus("detecting")
+
+    // Limpiar refs
+    lastUpdateTimeRef.current = 0
+    lastEmotionRef.current = ""
   }
 
   const toggleCamera = () => {
@@ -217,18 +218,17 @@ export default function EmotionRecognition() {
                 </div>
               )}
 
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
+              {/* Imagen para mostrar frame del backend (con bounding boxes) */}
+              {/* ✅ Simple como index.html - el navegador optimiza automáticamente */}
+              <img
+                ref={imgRef}
+                alt="Detección de emociones en tiempo real"
                 className={`w-full h-full object-cover transition-all duration-500 ${!isActive ? "hidden" : "animate-scale-in"}`}
               />
-              <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
               {!isActive && (
                 <div className="text-center text-muted-foreground p-8 animate-float">
                   <VideoOff className="w-24 h-24 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg">Activa la cámara para comenzar</p>
+                  <p className="text-lg">Conecta al sistema de detección para comenzar</p>
                 </div>
               )}
             </div>
@@ -247,12 +247,12 @@ export default function EmotionRecognition() {
                   {isActive ? (
                     <>
                       <VideoOff className="mr-2 h-5 w-5" />
-                      Detener Cámara
+                      Detener Detección
                     </>
                   ) : (
                     <>
                       <Video className="mr-2 h-5 w-5" />
-                      Iniciar Cámara
+                      Iniciar Detección
                     </>
                   )}
                 </Button>

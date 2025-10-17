@@ -7,7 +7,7 @@ import { useState } from "react"
 import { TrendingUp, BarChart3, PieChart as PieChartIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-type Emotion = "feliz" | "triste" | "neutral" | "enojado" | "sorprendido" | "amor"
+type Emotion = "feliz" | "triste" | "neutral" | "enojado" | "sorprendido" | "disgusto" | "miedo"
 
 interface EmotionData {
   emotion: Emotion
@@ -64,13 +64,21 @@ const emotionColors: Record<Emotion, {
     bg: "bg-violet-50 dark:bg-violet-950/20",
     text: "text-violet-700 dark:text-violet-300"
   },
-  amor: {
-    primary: "#f472b6", // pink-400 - más suave
-    light: "#f9a8d4", // pink-300
-    hover: "#ec4899", // pink-500 - más intenso para hover
-    gradient: "from-pink-300 to-pink-500",
-    bg: "bg-pink-50 dark:bg-pink-950/20",
-    text: "text-pink-700 dark:text-pink-300"
+  disgusto: {
+    primary: "#22c55e", // green-500
+    light: "#4ade80", // green-400
+    hover: "#16a34a", // green-600
+    gradient: "from-green-400 to-green-600",
+    bg: "bg-green-50 dark:bg-green-950/20",
+    text: "text-green-700 dark:text-green-300"
+  },
+  miedo: {
+    primary: "#7c3aed", // purple-700
+    light: "#a78bfa", // purple-400
+    hover: "#6d28d9", // purple-800
+    gradient: "from-purple-400 to-purple-800",
+    bg: "bg-purple-50 dark:bg-purple-950/20",
+    text: "text-purple-700 dark:text-purple-300"
   },
 }
 
@@ -80,7 +88,8 @@ const emotionLabels: Record<Emotion, string> = {
   neutral: "Neutral",
   enojado: "Enojado",
   sorprendido: "Sorprendido",
-  amor: "Amor",
+  disgusto: "Disgusto",
+  miedo: "Miedo",
 }
 
 const emotionIcons: Record<Emotion, string> = {
@@ -89,7 +98,8 @@ const emotionIcons: Record<Emotion, string> = {
   neutral: "😐",
   enojado: "😠",
   sorprendido: "😲",
-  amor: "😍",
+  disgusto: "🤢",
+  miedo: "😨",
 }
 
 type ChartType = "bar" | "pie"

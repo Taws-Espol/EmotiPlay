@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Music, Play, Pause, SkipForward, Volume2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-type Emotion = "feliz" | "triste" | "neutral" | "enojado" | "sorprendido" | "amor"
+type Emotion = "feliz" | "triste" | "neutral" | "enojado" | "sorprendido" | "disgusto" | "miedo"
 
 interface SpotifyPlayerProps {
   currentEmotion?: Emotion
@@ -46,11 +46,17 @@ const emotionPlaylists = {
     description: "Música sorprendente y dinámica",
     color: "from-purple-500/20 to-violet-500/20",
   },
-  amor: {
-    name: "Love Songs",
-    id: "37i9dQZF1DX50QitC6Oqtn",
-    description: "Música romántica y emotiva",
-    color: "from-pink-500/20 to-rose-500/20",
+  disgusto: {
+    name: "Dark Vibes",
+    id: "37i9dQZF1DX1lVhptIYRda",
+    description: "Música oscura e intensa",
+    color: "from-green-600/20 to-emerald-700/20",
+  },
+  miedo: {
+    name: "Thriller Soundtrack",
+    id: "37i9dQZF1DWXm2TVmPWT5O",
+    description: "Música misteriosa y suspense",
+    color: "from-purple-800/20 to-indigo-900/20",
   },
 }
 

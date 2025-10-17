@@ -4,10 +4,10 @@ import { Card } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Smile, Frown, Meh, Angry, Sunrise as Surprise, Heart, Clock, Download, Calendar } from "lucide-react"
+import { Smile, Frown, Meh, Angry, Sunrise as Surprise, Frown as Disgust, Zap as Fear, Clock, Download, Calendar } from "lucide-react"
 import { useState } from "react"
 
-type Emotion = "feliz" | "triste" | "neutral" | "enojado" | "sorprendido" | "amor"
+type Emotion = "feliz" | "triste" | "neutral" | "enojado" | "sorprendido" | "disgusto" | "miedo"
 
 interface EmotionData {
   emotion: Emotion
@@ -21,7 +21,8 @@ const emotionIcons = {
   neutral: Meh,
   enojado: Angry,
   sorprendido: Surprise,
-  amor: Heart,
+  disgusto: Disgust,
+  miedo: Fear,
 }
 
 const emotionColors = {
@@ -60,12 +61,19 @@ const emotionColors = {
     dot: "bg-violet-400",
     line: "bg-violet-400"
   },
-  amor: {
-    bg: "bg-pink-50 dark:bg-pink-950/20",
-    text: "text-pink-700 dark:text-pink-300",
-    border: "border-pink-200 dark:border-pink-800",
-    dot: "bg-pink-400",
-    line: "bg-pink-400"
+  disgusto: {
+    bg: "bg-green-50 dark:bg-green-950/20",
+    text: "text-green-700 dark:text-green-300",
+    border: "border-green-200 dark:border-green-800",
+    dot: "bg-green-500",
+    line: "bg-green-500"
+  },
+  miedo: {
+    bg: "bg-purple-50 dark:bg-purple-950/20",
+    text: "text-purple-700 dark:text-purple-300",
+    border: "border-purple-200 dark:border-purple-800",
+    dot: "bg-purple-700",
+    line: "bg-purple-700"
   },
 }
 
@@ -75,7 +83,8 @@ const emotionLabels = {
   neutral: "Neutral",
   enojado: "Enojado",
   sorprendido: "Sorprendido",
-  amor: "Amor",
+  disgusto: "Disgusto",
+  miedo: "Miedo",
 }
 
 const emotionEmojis = {
@@ -84,7 +93,8 @@ const emotionEmojis = {
   neutral: "😐",
   enojado: "😠",
   sorprendido: "😲",
-  amor: "😍",
+  disgusto: "🤢",
+  miedo: "😨",
 }
 
 export default function EmotionHistory({ data }: { data: EmotionData[] }) {
