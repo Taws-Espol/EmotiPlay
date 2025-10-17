@@ -146,7 +146,7 @@ def play_music(request: PlaybackRequest):
     play_endpoint = f"/play?device_id={default_device_id}"
 
     play_data = {
-            "context_uri": f"spotify:playlist:{playlist[emotion]['playlist']}",
+            "context_uri": f"{playlist[emotion]['playlist']}",
             "offset": {
                 "position": rd.randint(0, playlist[emotion]['total_songs'] - 1)
                 },
