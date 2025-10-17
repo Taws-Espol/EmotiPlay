@@ -5,6 +5,7 @@ import os
 import base64
 import urllib.parse
 import requests
+import random as rd
 from dotenv import load_dotenv
 from app.services.spotify_service import make_spotify_api_request, find_spotify_device_id
 from app.models.spotify_detection_model import PlaybackRequest
@@ -24,12 +25,30 @@ stored_access_token = None
 default_device_id = None
 
 playlist = {
-        "happy": "uri_playlist_happy",
-        "surprise": "uri_playlist_surprise",
-        "sad": "uri_playlist_sad",
-        "angry": "uri_playlist_angry",
-        "disgust": "uri_playlist_disgust",
-        "fear": "uri_playlist_fear"
+        "happy": {
+            'playlist' : "uri_playlist_happy",
+            'total_songs': 0
+            },
+        "surprise": {
+            'playlist' : "uri_playlist_happy",
+            'total_songs': 0
+            },
+        "sad":{
+            'playlist' : "uri_playlist_happy",
+            'total_songs': 0
+            },
+        "angry":{
+            'playlist' : "uri_playlist_happy",
+            'total_songs': 0
+            },
+        "disgust":{
+            'playlist' : "uri_playlist_happy",
+            'total_songs': 0
+            },
+        "fear":{
+            'playlist' : "uri_playlist_happy",
+            'total_songs': 0
+            },
         }
 
 @router.get("/login")
@@ -127,9 +146,9 @@ def play_music(request: PlaybackRequest):
     play_endpoint = f"/play?device_id={default_device_id}"
 
     play_data = {
-            "context_uri": f"spotify:album:{playlist[emotion]}",
+            "context_uri": f"spotify:playlist:{playlist[emotion]['playlist']}",
             "offset": {
-                "position": 5
+                "position": rd.randint(0, playlist[emotion]['total_songs'] - 1)
                 },
             "position_ms": 0
             }
