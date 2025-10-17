@@ -9,4 +9,3 @@ class EmotionDetectionResponse(BaseModel):
 
 class EmotionHistoryResponse(BaseModel):
     history: list[str]
-

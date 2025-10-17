@@ -1,10 +1,12 @@
 import time
 from fastapi import FastAPI, Request
 from app.core.settings import settings
-from app.routers import emotion_detection, checkhealth
+from app.routers import emotion_detection, checkhealth, spotify
 import logging
-
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+load_dotenv()
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -38,6 +40,7 @@ async def log_request(request: Request, call_next):
 
 app.include_router(emotion_detection.router)
 app.include_router(checkhealth.router)
+app.include_router(spotify.router, prefix="/api/spotify", tags=["Spotify"])
 
 @app.get("/")
 async def root():
