@@ -353,7 +353,16 @@ class EmotionDetectionBroadcaster:
 
     def detection_loop(self):
         """Main detection loop running in separate thread"""
-        cap = cv2.VideoCapture(0)
+        import platform
+        
+        # Use AVFoundation backend on macOS for better compatibility
+        # Camera 1 is usually the real webcam (camera 0 might be iPhone Continuity Camera)
+        if platform.system() == 'Darwin':
+            cap = cv2.VideoCapture(1, cv2.CAP_AVFOUNDATION)
+            print("Using AVFoundation backend (macOS) - Camera 1")
+        else:
+            cap = cv2.VideoCapture(0)
+        
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 

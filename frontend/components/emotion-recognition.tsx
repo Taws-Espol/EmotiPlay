@@ -232,11 +232,11 @@ export default function EmotionRecognition() {
               )}
 
               {/* Imagen para mostrar frame del backend (con bounding boxes) */}
-              {/* ✅ Simple como index.html - el navegador optimiza automáticamente */}
               <img
                 ref={imgRef}
                 alt="Detección de emociones en tiempo real"
-                className={`w-full h-full object-cover transition-all duration-500 ${!isActive ? "hidden" : "animate-scale-in"}`}
+                className={`w-full h-full object-cover transition-all duration-500 ${!isActive ? "hidden" : "block"}`}
+                src=""
               />
               {!isActive && (
                 <div className="text-center text-muted-foreground p-8 animate-float">

@@ -63,6 +63,9 @@ export class EmotionWebSocket {
       this.ws.onmessage = (event) => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data)
+          
+          // Debug: verificar que llegan los frames
+          console.log('📦 Frame recibido:', message.frame ? `${message.frame.length} bytes` : 'sin frame')
 
           // Enviar frame procesado (YA viene con bounding boxes dibujados)
           if (this.onFrameCallback && message.frame) {

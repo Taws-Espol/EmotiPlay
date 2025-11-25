@@ -1,0 +1,27 @@
+# Requirements for macOS (without NVIDIA dependencies)
+fastapi
+uvicorn
+python-dotenv
+pydantic
+pydantic-settings
+
+# Computer Vision & ML
+opencv-python
+numpy
+pillow
+
+# PyTorch (CPU version for macOS)
+torch
+torchvision
+
+# YOLO & Supervision
+ultralytics
+supervision
+
+# Utilities
+websockets
+matplotlib
+scipy
+tqdm
+requests
+
